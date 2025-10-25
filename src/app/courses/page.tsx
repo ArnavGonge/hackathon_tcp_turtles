@@ -26,6 +26,7 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<courses[]>([]);
   const [courseName, setCourseName] = useState("");
   const [courseCode, setCourseCode] = useState("");
+  const [selectedValue, setSelectedValue] = useState(""); // Track the full select value
   const [lecturerRating, setLecturerRating] = useState(0);
   const [materialRating, setMaterialRating] = useState(0);
   const [overallJoy, setOverallJoy] = useState(0);
@@ -77,6 +78,7 @@ export default function CoursesPage() {
     ]);
     setCourseName("");
     setCourseCode("");
+    setSelectedValue(""); // Reset select
     setLecturerRating(0);
     setMaterialRating(0);
     setOverallJoy(0);
@@ -153,12 +155,14 @@ export default function CoursesPage() {
           <div className="space-y-2">
             <label htmlFor="courseCode">Course Code</label>
             <Select
-              value={courseCode}
+              value={selectedValue}
               onValueChange={(value) => {
-                const courseCode = value.split(" - ")[0];
-                const courseName = value.split(" - ")[1] || "";
-                setCourseCode(courseCode);
-                setCourseName(courseName);
+                setSelectedValue(value);
+                const parts = value.split(" - ");
+                const code = parts[0];
+                const name = parts.slice(1).join(" - "); // Handle names with " - " in them
+                setCourseCode(code);
+                setCourseName(name);
               }}
             >
               <SelectTrigger className="w-full">
