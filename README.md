@@ -6,15 +6,14 @@ Stop spending 3 hours scrolling through the course catalog at 2am. Let AI do it 
 
 # PART A: Project Responses
 
-## Team Name / Members
-**Team:** [TCP Turtles]
+**Team:** TCP Turtles
 
 **Members:**
-- [Tanni]
-- [Mark]
-- [Russell]
-- [Karthik]
-- [Arnav]
+- Tanni
+- Mark
+- Russell
+- Karthik
+- Arnav
 
 ---
 
@@ -363,13 +362,14 @@ history (user_id, course_id)
 ### Database Setup
 
 1. Create a Supabase project at supabase.com
-2. Run the make_dc script in the SQL Editor:
+2. Run the make_db script in the SQL Editor.
 3. Go to Authentication > Settings and enable Email provider
 4. Optionally disable email confirmation for testing
 
 ### ENV SETUP
 
-# USE ENV FILE PROVIDED IN ADDITIONAL FILES ON DEVPOST
+USE ENV FILE PROVIDED IN ADDITIONAL FILES ON DEVPOST.
+ADD IT TO PROJECT ROOT DIR.
 
 ### Backend Setup
 
@@ -486,7 +486,7 @@ All core logic and algorithms written by the team. AI was a coding assistant, no
 ---
 
 **Project Demo:** [YouTube Link]
-**Code:** [GitHub Link]
+**Code:** [https://github.com/MortalFlame21/hackathon_tcp_turtles/]
 **Live Demo:** [Deployed URL]
 
 ---
