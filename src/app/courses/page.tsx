@@ -24,6 +24,7 @@ import Link from "next/link";
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState<courses[]>([]);
+  const [courseName, setCourseName] = useState("");
   const [courseCode, setCourseCode] = useState("");
   const [lecturerRating, setLecturerRating] = useState(0);
   const [materialRating, setMaterialRating] = useState(0);
@@ -66,7 +67,7 @@ export default function CoursesPage() {
     setCourseList([
       ...courseList,
       {
-        name: courseCode,
+        name: courseName,
         code: courseCode,
         lecturer: lecturerRating,
         joy: overallJoy,
@@ -74,6 +75,7 @@ export default function CoursesPage() {
         material: materialRating,
       },
     ]);
+    setCourseName("");
     setCourseCode("");
     setLecturerRating(0);
     setMaterialRating(0);
@@ -150,7 +152,15 @@ export default function CoursesPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="courseCode">Course Code</label>
-            <Select value={courseCode} onValueChange={setCourseCode}>
+            <Select
+              value={courseCode}
+              onValueChange={(value) => {
+                const courseCode = value.split(" - ")[0];
+                const courseName = value.split(" - ")[1] || "";
+                setCourseCode(courseCode);
+                setCourseName(courseName);
+              }}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a course" />
               </SelectTrigger>
@@ -162,8 +172,11 @@ export default function CoursesPage() {
                     </SelectItem>
                   ) : (
                     courses.map((course) => (
-                      <SelectItem key={course.id} value={course.id}>
-                        {course.id}
+                      <SelectItem
+                        key={course.id}
+                        value={`${course.id} - ${course.name}`}
+                      >
+                        {course.id} - {course.name}
                       </SelectItem>
                     ))
                   )}
@@ -234,10 +247,7 @@ export default function CoursesPage() {
                   >
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-gray-800 dark:text-gray-100">
-                        {c.code}
-                      </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {c.name}
+                        {c.code} - {c.name}
                       </span>
                     </div>
 
