@@ -8,6 +8,6 @@ export default defineConfig({
   },
   engine: "classic",
   datasource: {
-    url: env("NEXT_PUBLIC_SUPABASE_URL"),
+    url: env("DATABASE_URL"),
   },
 });
