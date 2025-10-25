@@ -315,39 +315,6 @@ This shows we're thinking about scale, not just making a demo that barely works.
 - **Supabase (PostgreSQL)** - Managed database with auto-generated REST API
 - **Supabase Auth** - Handles authentication, email confirmation, JWT tokens
 
-### Project Structure
-
-```
-project/
-├── frontend/
-│   ├── src/app/
-│   │   ├── page.tsx              # Login
-│   │   ├── signup/page.tsx       # 3-step signup
-│   │   └── courses/page.tsx      # Course browser
-│   ├── components/ui/            # shadcn components
-│   └── lib/supabaseClient.ts     # Supabase config
-│
-├── backend/
-│   ├── app.py                    # FastAPI routes
-│   ├── recommender.py            # Recommendation engine
-│   ├── database.py               # Supabase client
-│   ├── models.py                 # Data models
-│   └── helpers.py                # Utility functions
-│
-└── README.md
-```
-
-### Database Schema
-
-```sql
-users (id, email, created_at)
-courses (id, name, description, source_url, rating)
-tags (id, name)
-course_tag (course_id, tag_id)
-ratings (user_id, course_id, lecturer, material, grading, joy)
-history (user_id, course_id)
-```
-
 ---
 
 # PART B: Setup and User Guide
@@ -355,48 +322,22 @@ history (user_id, course_id)
 ## Installation
 
 ### What You Need
-- Node.js 18+
-- Python 3.13+
-- Supabase account (free)
-
-### Database Setup
-
-1. Create a Supabase project at supabase.com
-2. Run the make_db script in the SQL Editor.
-3. Go to Authentication > Settings and enable Email provider
-4. Optionally disable email confirmation for testing
+- Docker & Docker Compose installed
 
 ### ENV SETUP
 
 USE ENV FILE PROVIDED IN ADDITIONAL FILES ON DEVPOST.
 ADD IT TO PROJECT ROOT DIR.
 
-### Backend Setup
-
+### Run the containers
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Run it
-python app.py
+docker-compose up --build
 ```
 
-Backend runs at `http://localhost:8000`
-API docs at `http://localhost:8000/docs`
-
-### Frontend Setup
-
+### To stop the containers
 ```bash
-cd frontend
-npm install
-
-# Run it
-npm run dev
+docker-compose down
 ```
-
-Frontend runs at `http://localhost:3000`
 
 ## How to Use It
 
