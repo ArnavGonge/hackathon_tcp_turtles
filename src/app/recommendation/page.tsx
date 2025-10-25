@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -11,94 +10,161 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, Link as LinkIcon, Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ExternalLink, Link as LinkIcon, Search, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 type CourseRecommendation = {
   course_id: string;
-  course_name: string;
-  source_url: string;
   description: string;
+  score: number;
+  collaborative_score: number;
+  content_score: number;
+  confidence: string;
+  avg_rating: number;
+  tags: string[];
+  reasons: string[];
 };
 
 export default function RecommendationPage() {
+  const router = useRouter();
   const [recs, setRecs] = useState<CourseRecommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userTags, setUserTags] = useState<string[]>([]);
 
   useEffect(() => {
     let active = true;
-    const run = async () => {
+
+    const fetchRecommendations = async () => {
       setLoading(true);
       setError(null);
+
       try {
-        const res = await fetch("/api/recommendation", { cache: "no-store" });
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        const data = (await res.json()) as CourseRecommendation[];
-        if (active) setRecs(Array.isArray(data) ? data : []);
-      } catch (e: unknown) {
-        console.error(e);
-        // Fallback to sample when API not available
-        const sample: CourseRecommendation[] = [
-          {
-            course_id: "C001",
-            course_name: "Introduction to Programming",
-            source_url: "https://www.example.com/intro-to-programming",
-            description:
-              "Learn the basics of programming, including variables, control structures, and functions using Python.",
-          },
-          {
-            course_id: "C002",
-            course_name: "Web Development Fundamentals",
-            source_url: "https://www.example.com/web-development",
-            description:
-              "Further Web Programming provides a range of enabling skills for independent development of small to medium-scale industry standard web applications. These skills will equip you to be ready for commercial development and to meet the demand of small to medium sized organisations such as start-ups, small businesses, and other ventures.Emphasis is placed on the processes, tools and frameworks required to develop applications for current and emerging web platforms.In addition, you will learn industry level development methodologies as well as selected software engineering patterns such as Event Driven Programming. Through practical work, you will encounter a variety of real-world scenarios.",
-          },
-          {
-            course_id: "C003",
-            course_name: "Database Design",
-            source_url: "https://www.example.com/database-design",
-            description:
-              "Understand how to design efficient databases, create ER diagrams, and write SQL queries.",
-          },
-        ];
+        // Get the authenticated user
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError || !user) {
+          setError("Please log in to see recommendations");
+          router.push("/login");
+          return;
+        }
+
         if (active) {
-          setRecs(sample);
-          setError("Using sample data (API unavailable)");
+          setUserId(user.id);
+        }
+
+        // Get user profile from localStorage to retrieve tags
+        const userProfileStr = localStorage.getItem("userProfile");
+        let tags: string[] = [];
+
+        if (userProfileStr) {
+          const userProfile = JSON.parse(userProfileStr);
+          tags = userProfile.tags || [];
+          if (active) {
+            setUserTags(tags);
+          }
+        }
+
+        // Build the query parameters
+        const params = new URLSearchParams({
+          limit: "20",
+        });
+
+        if (tags.length > 0) {
+          params.append("tags", tags.join(","));
+        }
+
+        // Call the FastAPI backend
+        const backendUrl = `http://127.0.0.1:8000/api/recommendations/${
+          user.id
+        }?${params.toString()}`;
+        console.log("Fetching from:", backendUrl);
+
+        const res = await fetch(backendUrl, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch recommendations: ${res.status}`);
+        }
+
+        const data = await res.json();
+        console.log("Received recommendations:", data);
+
+        if (active) {
+          setRecs(data.recommendations || []);
+        }
+      } catch (e: unknown) {
+        console.error("Error fetching recommendations:", e);
+        if (active) {
+          setError(
+            e instanceof Error ? e.message : "Failed to load recommendations"
+          );
         }
       } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     };
-    run();
+
+    fetchRecommendations();
+
     return () => {
       active = false;
     };
-  }, []);
+  }, [router]);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return recs;
     const q = query.toLowerCase();
     return recs.filter(
       (r) =>
-        r.course_name.toLowerCase().includes(q) ||
+        r.course_id.toLowerCase().includes(q) ||
         r.description.toLowerCase().includes(q) ||
-        r.course_id.toLowerCase().includes(q)
+        r.tags.some((tag) => tag.toLowerCase().includes(q))
     );
   }, [recs, query]);
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-8">
       <section className="mb-8 rounded-2xl border bg-card p-6 shadow-xs sm:p-8">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <header className="flex flex-col gap-4">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               Recommended Courses
             </h1>
             <p className="text-muted-foreground">
-              Curated suggestions to help you pick your next course.
+              Personalized suggestions based on your profile and preferences.
             </p>
-            {error && <p className="mt-2 text-xs text-primary">{error}</p>}
+            {userId && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                User ID: {userId}
+              </p>
+            )}
+            {userTags.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className="text-xs text-muted-foreground">
+                  Your tags:
+                </span>
+                {userTags.map((tag, idx) => (
+                  <Badge key={idx} variant="secondary" className="text-xs">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
           </div>
           <div className="w-full max-w-md">
             <label htmlFor="search" className="sr-only">
@@ -110,7 +176,7 @@ export default function RecommendationPage() {
                 id="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by name, topic, or id…"
+                placeholder="Search by course, topic, or tag..."
                 className="bg-muted pl-9"
               />
             </div>
@@ -140,50 +206,67 @@ export default function RecommendationPage() {
 }
 
 function RecommendationCard({ rec }: { rec: CourseRecommendation }) {
-  const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(rec.source_url);
-    } catch {
-      // no-op
-    }
-  };
-
   return (
-    <Card className="group border-border/80 bg-card shadow-sm ring-1 ring-transparent transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-(--primary)/20 relative">
-      <CardHeader className="pb-0">
-        <CardTitle className="text-lg">{rec.course_name}</CardTitle>
-        <CardDescription className="text-xs">#{rec.course_id}</CardDescription>
-        <CardAction>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={copyLink}
-            aria-label="Copy course link"
-            title="Copy link"
-          >
-            <LinkIcon className="size-4" />
-          </Button>
-        </CardAction>
+    <Card className="group border-border/80 bg-card shadow-sm ring-1 ring-transparent transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-primary/20 flex flex-col">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="text-lg">{rec.course_id}</CardTitle>
+            <CardDescription className="text-xs mt-1">
+              Score: {rec.score} | Confidence: {rec.confidence}
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            ⭐ {rec.avg_rating}
+          </div>
+        </div>
+        {rec.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {rec.tags.slice(0, 3).map((tag, idx) => (
+              <Badge key={idx} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+            {rec.tags.length > 3 && (
+              <Badge variant="outline" className="text-xs">
+                +{rec.tags.length - 3}
+              </Badge>
+            )}
+          </div>
+        )}
       </CardHeader>
-      <CardContent className="pt-4 pb-12">
-        <p className="line-clamp-4 text-sm text-muted-foreground">
+      <CardContent className="flex-1 flex flex-col">
+        <p className="line-clamp-3 text-sm text-muted-foreground mb-3">
           {rec.description}
         </p>
+
+        {rec.reasons.length > 0 && (
+          <div className="mt-auto pt-3 border-t">
+            <p className="text-xs font-medium text-muted-foreground mb-1">
+              Why this course?
+            </p>
+            <ul className="text-xs text-muted-foreground space-y-1">
+              {rec.reasons.slice(0, 2).map((reason, idx) => (
+                <li key={idx} className="flex items-start gap-1">
+                  <span className="text-primary">•</span>
+                  <span>{reason}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+          <div className="bg-muted rounded p-2">
+            <span className="text-muted-foreground">Collab:</span>
+            <span className="ml-1 font-medium">{rec.collaborative_score}</span>
+          </div>
+          <div className="bg-muted rounded p-2">
+            <span className="text-muted-foreground">Content:</span>
+            <span className="ml-1 font-medium">{rec.content_score}</span>
+          </div>
+        </div>
       </CardContent>
-      <Button
-        className="absolute bottom-3 left-4 gap-2 rounded-lg"
-        asChild
-        aria-label="Open course in a new tab"
-      >
-        <a
-          href={rec.source_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Open course"
-        >
-          Open course <ExternalLink className="size-4" />
-        </a>
-      </Button>
     </Card>
   );
 }
@@ -194,7 +277,7 @@ function GridSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="animate-pulse rounded-xl border border-border/80 bg-[--accent] p-6"
+          className="animate-pulse rounded-xl border border-border/80 bg-accent p-6"
         >
           <div className="mb-3 h-5 w-2/3 rounded bg-border" />
           <div className="mb-1 h-3 w-20 rounded bg-border" />
@@ -203,7 +286,7 @@ function GridSkeleton() {
             <div className="h-3 w-[92%] rounded bg-border" />
             <div className="h-3 w-[85%] rounded bg-border" />
           </div>
-          <div className="mt-6 h-9 w-32 rounded-md bg-(--primary)/20" />
+          <div className="mt-6 h-9 w-32 rounded-md bg-primary/20" />
         </div>
       ))}
     </div>
@@ -213,12 +296,12 @@ function GridSkeleton() {
 function EmptyState({ reset }: { reset: () => void }) {
   return (
     <div className="mx-auto max-w-md p-8 text-center">
-      <h2 className="text-base font-medium">No matches</h2>
+      <h2 className="text-base font-medium">No recommendations found</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Try a different search term or clear the filter.
+        Try adjusting your search or update your profile tags.
       </p>
       <Button onClick={reset} variant="secondary" className="mt-4">
-        Reset
+        Reset Search
       </Button>
     </div>
   );
