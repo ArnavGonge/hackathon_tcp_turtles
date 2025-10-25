@@ -255,17 +255,6 @@ function RecommendationCard({ rec }: { rec: CourseRecommendation }) {
             </ul>
           </div>
         )}
-
-        <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-          <div className="bg-muted rounded p-2">
-            <span className="text-muted-foreground">Collab:</span>
-            <span className="ml-1 font-medium">{rec.collaborative_score}</span>
-          </div>
-          <div className="bg-muted rounded p-2">
-            <span className="text-muted-foreground">Content:</span>
-            <span className="ml-1 font-medium">{rec.content_score}</span>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
