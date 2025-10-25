@@ -97,7 +97,7 @@ export default function RecommendationPage() {
               Recommended Courses
             </h1>
             <p className="text-muted-foreground">
-              Curated suggestions to help you pick next course.
+              Curated suggestions to help you pick your next course.
             </p>
             {error && <p className="mt-2 text-xs text-primary">{error}</p>}
           </div>
