@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
 type CourseRecommendation = {
+  name: string;
   course_id: string;
   description: string;
   score: number;
@@ -84,7 +85,7 @@ export default function RecommendationPage() {
         // Call the FastAPI backend
         const backendUrl = `http://127.0.0.1:8000/api/recommendations/${
           user.id
-        }?${params.toString()}`;
+        }?${params.toString()}&limit=3`;
         console.log("Fetching from:", backendUrl);
 
         const res = await fetch(backendUrl, {
@@ -180,7 +181,7 @@ export default function RecommendationPage() {
                 className="bg-muted pl-9"
               />
             </div>
-            <div className="mt-2 text-right text-xs text-muted-foreground">
+            <div className="mt-2 text-xs text-muted-foreground">
               {filtered.length} result{filtered.length === 1 ? "" : "s"}
             </div>
           </div>
@@ -211,7 +212,9 @@ function RecommendationCard({ rec }: { rec: CourseRecommendation }) {
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg">{rec.course_id}</CardTitle>
+            <CardTitle className="text-lg">
+              {rec.course_id} - {rec.name}
+            </CardTitle>
             <CardDescription className="text-xs mt-1">
               Score: {rec.score} | Confidence: {rec.confidence}
             </CardDescription>
