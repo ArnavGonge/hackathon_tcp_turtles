@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useUser } from "@/components/context/UserContext";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -76,6 +76,12 @@ export default function LoginPage() {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Logging in..." : "Login"}
               </Button>
+              <p className="text-center text-sm text-muted-foreground">
+                Not a user?{" "}
+                <Link href="/login" className="text-primary hover:underline">
+                  Sign up
+                </Link>
+              </p>
             </form>
           </CardContent>
         </Card>
