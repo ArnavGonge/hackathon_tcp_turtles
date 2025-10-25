@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useUser } from "@/components/context/UserContext";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -27,7 +28,7 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
     } else {
-      router.push("/dashboard"); // redirect after successful login
+      router.push("/courses"); // redirect after successful login
     }
 
     setLoading(false);
