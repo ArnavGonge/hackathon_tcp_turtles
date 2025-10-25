@@ -211,12 +211,12 @@ function GridSkeleton() {
 
 function EmptyState({ reset }: { reset: () => void }) {
   return (
-    <div className="mx-auto max-w-md rounded-xl border border-dashed border-border p-8 text-center">
+    <div className="mx-auto max-w-md p-8 text-center">
       <h2 className="text-base font-medium">No matches</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         Try a different search term or clear the filter.
       </p>
-      <Button onClick={reset} variant="ghost" className="mt-4">
+      <Button onClick={reset} variant="secondary" className="mt-4">
         Reset
       </Button>
     </div>
