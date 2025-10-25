@@ -89,12 +89,18 @@ export default function SignupPage() {
 
     // Save description and tags to localStorage
     if (data.user) {
+      // Convert tag IDs to tag names
+      const selectedTagNames = availableTags
+        .filter((tag) => selectedTags.includes(tag.id))
+        .map((tag) => tag.name);
+
       const userProfile = {
         description,
-        tags: selectedTags,
+        tags: selectedTagNames, // Store tag names instead of IDs
         userId: data.user.id,
       };
       localStorage.setItem("userProfile", JSON.stringify(userProfile));
+      console.log("Saved user profile:", userProfile);
     }
 
     // Redirect after successful signup
