@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, Link as LinkIcon } from "lucide-react";
+import { ExternalLink, Link as LinkIcon, Search } from "lucide-react";
 
 type CourseRecommendation = {
   course_id: string;
@@ -90,29 +90,37 @@ export default function RecommendationPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-8">
-      <header className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Recommended Courses
-          </h1>
-          <p className="text-muted-foreground">
-            Curated suggestions to help you pick next course.
-          </p>
-          {error && <p className="mt-2 text-xs text-[--primary]">{error}</p>}
-        </div>
-        <div className="w-full max-w-md">
-          <label htmlFor="search" className="sr-only">
-            Search recommendations
-          </label>
-          <Input
-            id="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name, topic, or id…"
-            className="bg-[--accent]"
-          />
-        </div>
-      </header>
+      <section className="mb-8 rounded-2xl border bg-[--accent] p-6 shadow-xs sm:p-8">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Recommended Courses
+            </h1>
+            <p className="text-muted-foreground">
+              Curated suggestions to help you pick next course.
+            </p>
+            {error && <p className="mt-2 text-xs text-primary">{error}</p>}
+          </div>
+          <div className="w-full max-w-md">
+            <label htmlFor="search" className="sr-only">
+              Search recommendations
+            </label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by name, topic, or id…"
+                className="bg-background pl-9"
+              />
+            </div>
+            <div className="mt-2 text-right text-xs text-muted-foreground">
+              {filtered.length} result{filtered.length === 1 ? "" : "s"}
+            </div>
+          </div>
+        </header>
+      </section>
 
       {loading ? (
         <GridSkeleton />
@@ -142,7 +150,7 @@ function RecommendationCard({ rec }: { rec: CourseRecommendation }) {
   };
 
   return (
-    <Card className="group border-border/80 bg-card shadow-sm transition hover:shadow-md">
+    <Card className="group border-border/80 bg-card shadow-sm ring-1 ring-transparent transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-(--primary)/20">
       <CardHeader className="pb-0">
         <CardTitle className="text-lg">{rec.course_name}</CardTitle>
         <CardDescription className="text-xs">#{rec.course_id}</CardDescription>
