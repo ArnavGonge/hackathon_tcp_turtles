@@ -2,7 +2,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { courses } from "@prisma/client";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -14,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Link from "next/link";
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState<courses[]>([]);
@@ -268,6 +275,13 @@ export default function CoursesPage() {
             {loading ? "Submitting..." : "Submit All"}
           </Button>
         </CardContent>
+        <CardFooter>
+          <Link href="/recommendation" className="w-full text-center">
+            <Button variant="link" className="text-sm">
+              Go to Recommendations
+            </Button>
+          </Link>
+        </CardFooter>
       </Card>
     </div>
   );
