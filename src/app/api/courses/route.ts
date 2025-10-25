@@ -62,10 +62,19 @@ export async function POST(request: Request) {
       skipDuplicates: true, // Skip if user already rated this course
     });
 
+    const newCourses = await prisma.history.createMany({
+      data: courses.map((course) => ({
+        user_id: userId,
+        course_id: course.code,
+      })),
+      skipDuplicates: true,
+    });
+
     return NextResponse.json(
       {
-        message: "Ratings added successfully",
-        count: newRatings.count,
+        message: "Ratings and courses added successfully",
+        ratings_count: newRatings.count,
+        courses_count: newCourses.count,
       },
       { status: 201 }
     );
