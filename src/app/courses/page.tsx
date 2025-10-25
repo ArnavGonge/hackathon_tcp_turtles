@@ -17,7 +17,6 @@ import {
 export default function CoursesPage() {
   const [courses, setCourses] = useState<courses[]>([]);
   const [courseCode, setCourseCode] = useState("");
-  const [rating, setRating] = useState(0);
   const [lecturerRating, setLecturerRating] = useState(0);
   const [materialRating, setMaterialRating] = useState(0);
   const [overallRating, setOverallRating] = useState(0);
@@ -68,7 +67,6 @@ export default function CoursesPage() {
       },
     ]);
     setCourseCode("");
-    setRating(0);
     setLecturerRating(0);
     setMaterialRating(0);
     setOverallRating(0);
