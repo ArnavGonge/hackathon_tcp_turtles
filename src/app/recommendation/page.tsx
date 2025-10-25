@@ -90,7 +90,7 @@ export default function RecommendationPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-8">
-      <section className="mb-8 rounded-2xl border bg-[--accent] p-6 shadow-xs sm:p-8">
+      <section className="mb-8 rounded-2xl border bg-card p-6 shadow-xs sm:p-8">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
@@ -112,7 +112,7 @@ export default function RecommendationPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search by name, topic, or id…"
-                className="bg-background pl-9"
+                className="bg-muted pl-9"
               />
             </div>
             <div className="mt-2 text-right text-xs text-muted-foreground">
