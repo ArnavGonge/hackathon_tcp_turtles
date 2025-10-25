@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Link as LinkIcon, Search, Loader2 } from "lucide-react";
+import { Search, Loader2, X, ExternalLink, Star } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
@@ -26,6 +26,7 @@ type CourseRecommendation = {
   avg_rating: number;
   tags: string[];
   reasons: string[];
+  url?: string;
 };
 
 export default function RecommendationPage() {
@@ -36,6 +37,8 @@ export default function RecommendationPage() {
   const [query, setQuery] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   const [userTags, setUserTags] = useState<string[]>([]);
+  const [selectedCourse, setSelectedCourse] =
+    useState<CourseRecommendation | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -198,21 +201,42 @@ export default function RecommendationPage() {
           className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
         >
           {filtered.map((rec) => (
-            <RecommendationCard key={rec.course_id} rec={rec} />
+            <RecommendationCard
+              key={rec.course_id}
+              rec={rec}
+              onClick={() => setSelectedCourse(rec)}
+            />
           ))}
         </section>
+      )}
+
+      {/* Course Detail Modal */}
+      {selectedCourse && (
+        <CourseDetailModal
+          course={selectedCourse}
+          onClose={() => setSelectedCourse(null)}
+        />
       )}
     </main>
   );
 }
 
-function RecommendationCard({ rec }: { rec: CourseRecommendation }) {
+function RecommendationCard({
+  rec,
+  onClick,
+}: {
+  rec: CourseRecommendation;
+  onClick: () => void;
+}) {
   return (
-    <Card className="group border-border/80 bg-card shadow-sm ring-1 ring-transparent transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-primary/20 flex flex-col">
+    <Card
+      className="group border-border/80 bg-card shadow-sm ring-1 ring-transparent transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-primary/20 flex flex-col cursor-pointer"
+      onClick={onClick}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg">
+            <CardTitle className="text-lg group-hover:text-primary transition-colors">
               {rec.course_id} - {rec.name}
             </CardTitle>
             <CardDescription className="text-xs mt-1">
@@ -220,7 +244,8 @@ function RecommendationCard({ rec }: { rec: CourseRecommendation }) {
             </CardDescription>
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            ⭐ {rec.avg_rating}
+            <Star className="size-3 fill-yellow-400 text-yellow-400" />
+            {rec.avg_rating}
           </div>
         </div>
         {rec.tags.length > 0 && (
@@ -258,8 +283,146 @@ function RecommendationCard({ rec }: { rec: CourseRecommendation }) {
             </ul>
           </div>
         )}
+
+        <div className="mt-4 text-xs text-primary group-hover:underline">
+          Click to view details →
+        </div>
       </CardContent>
     </Card>
+  );
+}
+
+function CourseDetailModal({
+  course,
+  onClose,
+}: {
+  course: CourseRecommendation;
+  onClose: () => void;
+}) {
+  // Close on escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between p-6 pb-4 border-b">
+          <div className="flex-1 pr-4">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              {course.course_id}
+            </h2>
+            <p className="text-lg text-muted-foreground mt-1">{course.name}</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onClose}
+            className="shrink-0"
+          >
+            <X size={20} />
+          </Button>
+        </div>
+
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Rating and Scores */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-primary">
+                {course.score}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Overall Score
+              </div>
+            </div>
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <div className="flex items-center justify-center gap-1 text-2xl font-bold">
+                <Star className="size-5 fill-yellow-400 text-yellow-400" />
+                {course.avg_rating}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Avg Rating
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Description</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              {course.description || "No description available."}
+            </p>
+          </div>
+
+          {/* Tags */}
+          {course.tags.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Tags</h3>
+              <div className="flex flex-wrap gap-2">
+                {course.tags.map((tag, idx) => (
+                  <Badge key={idx} variant="secondary" className="text-sm">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recommendation Reasons */}
+          {course.reasons.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-3">
+                Why We Recommend This Course
+              </h3>
+              <ul className="space-y-2">
+                {course.reasons.map((reason, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-start gap-3 text-muted-foreground"
+                  >
+                    <div className="size-2 rounded-full bg-primary mt-2 shrink-0" />
+                    <span className="flex-1">{reason}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 pt-4 border-t flex gap-3">
+          <Button onClick={onClose} variant="outline" className="flex-1">
+            Close
+          </Button>
+          {course.url ? (
+            <Button
+              className="flex-1 gap-2"
+              onClick={() => window.open(course.url, "_blank")}
+            >
+              <ExternalLink size={16} />
+              View Full Course Page
+            </Button>
+          ) : (
+            <Button className="flex-1 gap-2" disabled>
+              <ExternalLink size={16} />
+              No Course Page Available
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

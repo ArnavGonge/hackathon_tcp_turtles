@@ -1,4 +1,3 @@
-# migrate_with_auth.py
 import sqlite3
 from supabase import create_client
 from config import SUPABASE_URL, SUPABASE_KEY, SUPABASE_SERVICE_KEY

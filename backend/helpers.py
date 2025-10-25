@@ -1,4 +1,3 @@
-# helpers.py
 from typing import Optional, Dict
 from database import supabase, get_single_record, count_records
 from uuid import UUID

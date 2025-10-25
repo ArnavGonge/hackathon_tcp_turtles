@@ -1,8 +1,7 @@
-# config.py
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv('../.env')
 
 # Supabase configuration
 SUPABASE_URL = os.getenv("SUPABASE_URL")
