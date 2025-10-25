@@ -26,7 +26,7 @@ def load_all_data():
     
     # Courses
     print("Loading courses...")
-    courses_response = supabase.table('courses').select('id, description, rating').execute()
+    courses_response = supabase.table('courses').select('id, name, source_url, description, rating').execute()
     courses_df = pd.DataFrame(courses_response.data)
     courses_df.rename(columns={'id': 'course_id', 'rating': 'avg_rating'}, inplace=True)
     
