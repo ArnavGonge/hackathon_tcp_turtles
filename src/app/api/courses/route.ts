@@ -16,47 +16,64 @@ export async function GET() {
   }
 }
 
-// export async function POST(request: Request) {
-//   try {
-//     // Grab access token from request headers
-//     const token = request.headers.get("Authorization")?.replace("Bearer ", "");
+export async function POST(request: Request) {
+  console.log("Received POST request to /api/courses");
+  try {
+    const token = request.headers.get("Authorization")?.replace("Bearer ", "");
+    if (!token) {
+      console.error("No access token provided");
+      return NextResponse.json(
+        { error: "No access token provided" },
+        { status: 401 }
+      );
+    }
 
-//     if (!token) {
-//       return NextResponse.json(
-//         { error: "No access token provided" },
-//         { status: 401 }
-//       );
-//     }
+    // Verify token with Supabase
+    const { data: user, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !user?.user) {
+      console.error("Invalid token:", userError);
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+    const userId = user.user.id;
 
-//     // Verify token with Supabase
-//     const { data: user, error: userError } = await supabase.auth.getUser(token);
+    // Grab courses array from request body
+    const { courses } = await request.json();
+    console.log("Received courses for user:", userId, courses);
 
-//     if (userError || !user?.user) {
-//       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-//     }
+    // Validate that courses is an array and not empty
+    if (!Array.isArray(courses) || courses.length === 0) {
+      console.error("Invalid request: courses must be a non-empty array");
+      return NextResponse.json(
+        { error: "Invalid request: courses must be a non-empty array" },
+        { status: 400 }
+      );
+    }
 
-//     const userId = user.user.id;
+    // Create all ratings using createMany for better performance
+    const newRatings = await prisma.ratings.createMany({
+      data: courses.map((course) => ({
+        user_id: userId,
+        course_id: course.code,
+        lecturer: course.lecturer,
+        joy: course.joy,
+        grading: course.grading,
+        material: course.material,
+      })),
+      skipDuplicates: true, // Skip if user already rated this course
+    });
 
-//     // Grab rating data from request body
-//     const { code, rating, overall, grading, material } = await request.json();
-
-// const newCourse = await prisma.ratings.create({
-//   data: {
-//     user_id: userId,
-//     course_id: code,
-//     joy: rating,
-//     grading,
-//     material,
-//     Date: new Date(),
-//   },
-// });
-
-//     return NextResponse.json(newCourse, { status: 201 });
-//   } catch (error) {
-//     console.error("Error adding course rating:", error);
-//     return NextResponse.json(
-//       { error: "Failed to add course rating" },
-//       { status: 500 }
-//     );
-//   }
-// }
+    return NextResponse.json(
+      {
+        message: "Ratings added successfully",
+        count: newRatings.count,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Error adding course ratings:", error);
+    return NextResponse.json(
+      { error: "Failed to add course ratings" },
+      { status: 500 }
+    );
+  }
+}

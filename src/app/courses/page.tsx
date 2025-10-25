@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { courses } from "@prisma/client";
+import { supabase } from "@/lib/supabaseClient";
 
 import {
   Select,
@@ -19,14 +20,14 @@ export default function CoursesPage() {
   const [courseCode, setCourseCode] = useState("");
   const [lecturerRating, setLecturerRating] = useState(0);
   const [materialRating, setMaterialRating] = useState(0);
-  const [overallRating, setOverallRating] = useState(0);
+  const [overallJoy, setOverallJoy] = useState(0);
   const [gradingRating, setGradingRating] = useState(0);
   const [courseList, setCourseList] = useState<
     {
       name: string;
       code: string;
-      rating: number;
-      overall: number;
+      lecturer: number;
+      joy: number;
       grading: number;
       material: number;
     }[]
@@ -60,8 +61,8 @@ export default function CoursesPage() {
       {
         name: courseCode,
         code: courseCode,
-        rating: lecturerRating,
-        overall: overallRating,
+        lecturer: lecturerRating,
+        joy: overallJoy,
         grading: gradingRating,
         material: materialRating,
       },
@@ -69,7 +70,7 @@ export default function CoursesPage() {
     setCourseCode("");
     setLecturerRating(0);
     setMaterialRating(0);
-    setOverallRating(0);
+    setOverallJoy(0);
     setGradingRating(0);
     setError("");
   };
@@ -82,20 +83,51 @@ export default function CoursesPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/courses/bulk", {
+      // Get the current session from Supabase
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        setError("Not authenticated. Please log in again.");
+        setLoading(false);
+        return;
+      }
+
+      const token = session.access_token;
+      console.log("Submitting courses:", courseList);
+      console.log("Token present:", !!token);
+
+      const res = await fetch("/api/courses", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ courses: courseList }),
       });
-      if (!res.ok) throw new Error("Failed to submit courses");
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to submit courses");
+      }
+
+      const result = await res.json();
+      console.log("Success:", result);
       setCourseList([]);
+
       // Optionally refresh the courses list
       const updatedRes = await fetch("/api/courses");
       const updatedData = await updatedRes.json();
       setCourses(updatedData);
     } catch (err) {
-      setError("Failed to add courses.");
-      console.error(err);
+      if (err instanceof Error) {
+        setError(`Failed to add courses. ${err.message}`);
+      } else {
+        setError("An unknown error occurred.");
+      }
+      console.error("Submit error:", err);
     }
     setLoading(false);
   };
@@ -163,8 +195,8 @@ export default function CoursesPage() {
                 min={0}
                 max={5}
                 step={0.5}
-                value={overallRating}
-                onChange={(e) => setOverallRating(Number(e.target.value))}
+                value={overallJoy}
+                onChange={(e) => setOverallJoy(Number(e.target.value))}
               />
             </div>
             <div>
@@ -180,18 +212,14 @@ export default function CoursesPage() {
             </div>
           </div>
 
-          <Button
-            type="button"
-            onClick={addCourse}
-            className="w-full bg-(--primary)/20"
-          >
+          <Button type="button" onClick={addCourse} className="w-full">
             Add to List
           </Button>
 
           {courseList.length > 0 && (
             <div className="space-y-2">
               <h3 className="text-lg font-medium">Courses to Add:</h3>
-              <ul>
+              <ul className="space-y-2">
                 {courseList.map((c, i) => (
                   <li
                     key={i}
@@ -209,15 +237,14 @@ export default function CoursesPage() {
                     <div className="grid grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
                       <div>
                         <span className="font-medium">Lecturer:</span>{" "}
-                        {c.rating}
+                        {c.lecturer}
                       </div>
                       <div>
                         <span className="font-medium">Material:</span>{" "}
                         {c.material}
                       </div>
                       <div>
-                        <span className="font-medium">Overall:</span>{" "}
-                        {c.overall}
+                        <span className="font-medium">Overall:</span> {c.joy}
                       </div>
                       <div>
                         <span className="font-medium">Grading:</span>{" "}
