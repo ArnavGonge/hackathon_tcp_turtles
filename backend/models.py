@@ -42,6 +42,8 @@ class RatingsBreakdown(BaseModel):
 
 class CourseDetail(BaseModel):
     id: str
+    name: str
+    url: Optional[str]
     description: str
     avg_rating: float
     tags: List[str]
@@ -51,6 +53,8 @@ class CourseDetail(BaseModel):
 
 class Recommendation(BaseModel):
     course_id: str
+    name: str
+    url: Optional[str]
     description: str
     score: float = Field(description="Overall recommendation score (0-5)")
     collaborative_score: float = Field(description="Score from collaborative filtering")
@@ -70,6 +74,8 @@ class RecommendationsResponse(BaseModel):
 
 class CourseSearchResult(BaseModel):
     id: str
+    name: str
+    url: Optional[str]
     description: str
     rating: float
     tags: List[str]

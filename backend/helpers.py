@@ -39,7 +39,7 @@ def get_user_stats(user_id: UUID) -> Dict:
 
 def get_course_details(course_id: str) -> Optional[Dict]:
     """Get course details"""
-    course = get_single_record('courses', {'id': course_id})
+    course = get_single_record('courses', {'id': course_id}, 'id, name, source_url, description, rating')
     if not course:
         return None
     
@@ -68,6 +68,8 @@ def get_course_details(course_id: str) -> Optional[Dict]:
     
     return {
         'id': course['id'],
+        'name': course['name'],
+        'url': course['source_url'],
         'description': course['description'],
         'avg_rating': round(float(course['rating']), 2) if course['rating'] else 0,
         'tags': tags,

@@ -102,7 +102,7 @@ def get_course(course_id: str = Path(description="The ID of the course")):
 @app.get("/api/recommendations/{user_id}", response_model=RecommendationsResponse, tags=["Recommendations"])
 def get_user_recommendations(
     user_id: UUID = Path(description="The ID of the user"),
-    tags: Optional[str] = Query(None, description="Comma-separated career tags", examples=["backend,devops"]),
+    tags: Optional[str] = Query(None, description="Comma-separated career tags", examples=["web-developer,devops-engineer"]),
     limit: int = Query(10, description="Number of recommendations", ge=1, le=20)
 ):
     try:
@@ -132,6 +132,8 @@ def get_user_recommendations(
         for _, row in recs.iterrows():
             recommendations_list.append({
                 "course_id": row['course_id'],
+                "name": row['name'],
+                "url": row['source_url'],
                 "description": row['description'],
                 "score": round(float(row['final_score']), 2),
                 "collaborative_score": round(float(row['collab_score']), 2),
@@ -161,7 +163,7 @@ def search_courses(
     limit: int = Query(20, description="Number of results", ge=1, le=50)
 ):
     try:
-        query = supabase.table('courses').select('id, description, rating')
+        query = supabase.table('courses').select('id, description, rating, name, source_url')
         
         if q:
             query = query.ilike('description', f'%{q}%')
@@ -179,6 +181,8 @@ def search_courses(
             courses.append({
                 "id": row['id'],
                 "description": row['description'],
+                "name": row['name'],
+                "url": row['source_url'],
                 "rating": round(float(row['rating']), 2) if row['rating'] else 0,
                 "tags": course_tags
             })
