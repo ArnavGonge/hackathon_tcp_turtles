@@ -6,7 +6,6 @@ import {
   CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -53,7 +52,7 @@ export default function RecommendationPage() {
             course_name: "Web Development Fundamentals",
             source_url: "https://www.example.com/web-development",
             description:
-              "An overview of HTML, CSS, and JavaScript to build and style interactive web pages.",
+              "Further Web Programming provides a range of enabling skills for independent development of small to medium-scale industry standard web applications. These skills will equip you to be ready for commercial development and to meet the demand of small to medium sized organisations such as start-ups, small businesses, and other ventures.Emphasis is placed on the processes, tools and frameworks required to develop applications for current and emerging web platforms.In addition, you will learn industry level development methodologies as well as selected software engineering patterns such as Event Driven Programming. Through practical work, you will encounter a variety of real-world scenarios.",
           },
           {
             course_id: "C003",
@@ -150,13 +149,13 @@ function RecommendationCard({ rec }: { rec: CourseRecommendation }) {
   };
 
   return (
-    <Card className="group border-border/80 bg-card shadow-sm ring-1 ring-transparent transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-(--primary)/20">
+    <Card className="group border-border/80 bg-card shadow-sm ring-1 ring-transparent transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-(--primary)/20 relative">
       <CardHeader className="pb-0">
         <CardTitle className="text-lg">{rec.course_name}</CardTitle>
         <CardDescription className="text-xs">#{rec.course_id}</CardDescription>
         <CardAction>
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={copyLink}
             aria-label="Copy course link"
@@ -166,23 +165,25 @@ function RecommendationCard({ rec }: { rec: CourseRecommendation }) {
           </Button>
         </CardAction>
       </CardHeader>
-      <CardContent className="pt-4">
+      <CardContent className="pt-4 pb-12">
         <p className="line-clamp-4 text-sm text-muted-foreground">
           {rec.description}
         </p>
       </CardContent>
-      <CardFooter className="pt-0">
-        <Button asChild className="gap-2" aria-label="Open course in a new tab">
-          <a
-            href={rec.source_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Open course"
-          >
-            Open course <ExternalLink className="size-4" />
-          </a>
-        </Button>
-      </CardFooter>
+      <Button
+        className="absolute bottom-3 left-4 gap-2 rounded-lg"
+        asChild
+        aria-label="Open course in a new tab"
+      >
+        <a
+          href={rec.source_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Open course"
+        >
+          Open course <ExternalLink className="size-4" />
+        </a>
+      </Button>
     </Card>
   );
 }
