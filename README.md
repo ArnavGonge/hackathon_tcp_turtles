@@ -426,8 +426,7 @@ All core logic and algorithms written by the team. AI was a coding assistant, no
 
 ---
 
-**Project Demo:** [YouTube Link]
+**Project Demo:** [https://youtu.be/QB42TJCPTS4]
 **Code:** [https://github.com/MortalFlame21/hackathon_tcp_turtles/]
-**Live Demo:** [Deployed URL]
 
 ---
