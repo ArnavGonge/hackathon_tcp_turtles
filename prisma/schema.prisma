@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model course_tag {
+  course_id String
+  tag_id    Int
+  courses   courses @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tags      tags    @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([course_id, tag_id])
+  @@index([course_id], map: "idx_course_tag_course")
+  @@index([tag_id], map: "idx_course_tag_tag")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model courses {
+  id                                 String        @id @unique
+  description                        String?
+  rating                             Float?        @default(0.0)
+  source_url                         String?       @default("")
+  course_tag                         course_tag[]
+  history                            history[]
+  listings                           listings[]
+  prereqs_prereqs_course_idTocourses prereqs[]     @relation("prereqs_course_idTocourses")
+  prereqs_prereqs_prereq_idTocourses prereqs[]     @relation("prereqs_prereq_idTocourses")
+  ratings                            ratings[]
+  sem_offered                        sem_offered[]
+}
+
+model history {
+  user_id   Int
+  course_id String  @db.VarChar(50)
+  courses   courses @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users     users   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([user_id, course_id])
+}
+
+model listings {
+  prog_id   String   @db.VarChar(50)
+  course_id String   @db.VarChar(50)
+  courses   courses  @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  programs  programs @relation(fields: [prog_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([prog_id, course_id])
+  @@index([prog_id], map: "idx_listings_prog")
+}
+
+model prereqs {
+  course_id                          String
+  prereq_id                          String
+  courses_prereqs_course_idTocourses courses @relation("prereqs_course_idTocourses", fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  courses_prereqs_prereq_idTocourses courses @relation("prereqs_prereq_idTocourses", fields: [prereq_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([course_id, prereq_id])
+  @@index([prereq_id], map: "idx_prereqs_prereq")
+}
+
+model programs {
+  id       String     @id
+  name     String
+  listings listings[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ratings {
+  id         Int       @id @default(autoincrement())
+  course_id  String
+  user_id    Int
+  lecturer   Int?
+  material   Int?
+  grading    Int?
+  joy        Int?
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  courses    courses   @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([course_id, user_id])
+  @@index([course_id], map: "idx_ratings_course")
+  @@index([user_id], map: "idx_ratings_user")
+}
+
+model sem_offered {
+  course_id String
+  sem_name  String
+  courses   courses @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "offered_in_course_id_fkey")
+  sems      sems    @relation(fields: [sem_name], references: [name], onDelete: Cascade, map: "offered_in_sem_name_fkey")
+
+  @@id([course_id, sem_name], map: "offered_in_pkey")
+  @@index([sem_name], map: "idx_offered_in_sem")
+}
+
+model sems {
+  name        String        @id @unique
+  date_start  DateTime      @unique @db.Timestamptz(6)
+  sem_offered sem_offered[]
+}
+
+model tags {
+  id         Int          @id @default(autoincrement())
+  name       String
+  course_tag course_tag[]
+}
+
+model users {
+  id         Int       @id @default(autoincrement())
+  username   String
+  bio        String?
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  history    history[]
+  ratings    ratings[]
+}
