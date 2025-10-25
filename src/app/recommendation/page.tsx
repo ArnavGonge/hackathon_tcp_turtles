@@ -1,0 +1,225 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ExternalLink, Link as LinkIcon, Search } from "lucide-react";
+
+type CourseRecommendation = {
+  course_id: string;
+  course_name: string;
+  source_url: string;
+  description: string;
+};
+
+export default function RecommendationPage() {
+  const [recs, setRecs] = useState<CourseRecommendation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    const run = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch("/api/recommendation", { cache: "no-store" });
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        const data = (await res.json()) as CourseRecommendation[];
+        if (active) setRecs(Array.isArray(data) ? data : []);
+      } catch (e: unknown) {
+        console.error(e);
+        // Fallback to sample when API not available
+        const sample: CourseRecommendation[] = [
+          {
+            course_id: "C001",
+            course_name: "Introduction to Programming",
+            source_url: "https://www.example.com/intro-to-programming",
+            description:
+              "Learn the basics of programming, including variables, control structures, and functions using Python.",
+          },
+          {
+            course_id: "C002",
+            course_name: "Web Development Fundamentals",
+            source_url: "https://www.example.com/web-development",
+            description:
+              "Further Web Programming provides a range of enabling skills for independent development of small to medium-scale industry standard web applications. These skills will equip you to be ready for commercial development and to meet the demand of small to medium sized organisations such as start-ups, small businesses, and other ventures.Emphasis is placed on the processes, tools and frameworks required to develop applications for current and emerging web platforms.In addition, you will learn industry level development methodologies as well as selected software engineering patterns such as Event Driven Programming. Through practical work, you will encounter a variety of real-world scenarios.",
+          },
+          {
+            course_id: "C003",
+            course_name: "Database Design",
+            source_url: "https://www.example.com/database-design",
+            description:
+              "Understand how to design efficient databases, create ER diagrams, and write SQL queries.",
+          },
+        ];
+        if (active) {
+          setRecs(sample);
+          setError("Using sample data (API unavailable)");
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    run();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return recs;
+    const q = query.toLowerCase();
+    return recs.filter(
+      (r) =>
+        r.course_name.toLowerCase().includes(q) ||
+        r.description.toLowerCase().includes(q) ||
+        r.course_id.toLowerCase().includes(q)
+    );
+  }, [recs, query]);
+
+  return (
+    <main className="mx-auto w-full max-w-6xl px-4 py-8">
+      <section className="mb-8 rounded-2xl border bg-card p-6 shadow-xs sm:p-8">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Recommended Courses
+            </h1>
+            <p className="text-muted-foreground">
+              Curated suggestions to help you pick your next course.
+            </p>
+            {error && <p className="mt-2 text-xs text-primary">{error}</p>}
+          </div>
+          <div className="w-full max-w-md">
+            <label htmlFor="search" className="sr-only">
+              Search recommendations
+            </label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by name, topic, or id…"
+                className="bg-muted pl-9"
+              />
+            </div>
+            <div className="mt-2 text-right text-xs text-muted-foreground">
+              {filtered.length} result{filtered.length === 1 ? "" : "s"}
+            </div>
+          </div>
+        </header>
+      </section>
+
+      {loading ? (
+        <GridSkeleton />
+      ) : filtered.length === 0 ? (
+        <EmptyState reset={() => setQuery("")} />
+      ) : (
+        <section
+          aria-live="polite"
+          className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          {filtered.map((rec) => (
+            <RecommendationCard key={rec.course_id} rec={rec} />
+          ))}
+        </section>
+      )}
+    </main>
+  );
+}
+
+function RecommendationCard({ rec }: { rec: CourseRecommendation }) {
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(rec.source_url);
+    } catch {
+      // no-op
+    }
+  };
+
+  return (
+    <Card className="group border-border/80 bg-card shadow-sm ring-1 ring-transparent transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-(--primary)/20 relative">
+      <CardHeader className="pb-0">
+        <CardTitle className="text-lg">{rec.course_name}</CardTitle>
+        <CardDescription className="text-xs">#{rec.course_id}</CardDescription>
+        <CardAction>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={copyLink}
+            aria-label="Copy course link"
+            title="Copy link"
+          >
+            <LinkIcon className="size-4" />
+          </Button>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="pt-4 pb-12">
+        <p className="line-clamp-4 text-sm text-muted-foreground">
+          {rec.description}
+        </p>
+      </CardContent>
+      <Button
+        className="absolute bottom-3 left-4 gap-2 rounded-lg"
+        asChild
+        aria-label="Open course in a new tab"
+      >
+        <a
+          href={rec.source_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Open course"
+        >
+          Open course <ExternalLink className="size-4" />
+        </a>
+      </Button>
+    </Card>
+  );
+}
+
+function GridSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className="animate-pulse rounded-xl border border-border/80 bg-[--accent] p-6"
+        >
+          <div className="mb-3 h-5 w-2/3 rounded bg-border" />
+          <div className="mb-1 h-3 w-20 rounded bg-border" />
+          <div className="mt-4 space-y-2">
+            <div className="h-3 w-full rounded bg-border" />
+            <div className="h-3 w-[92%] rounded bg-border" />
+            <div className="h-3 w-[85%] rounded bg-border" />
+          </div>
+          <div className="mt-6 h-9 w-32 rounded-md bg-(--primary)/20" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EmptyState({ reset }: { reset: () => void }) {
+  return (
+    <div className="mx-auto max-w-md p-8 text-center">
+      <h2 className="text-base font-medium">No matches</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Try a different search term or clear the filter.
+      </p>
+      <Button onClick={reset} variant="secondary" className="mt-4">
+        Reset
+      </Button>
+    </div>
+  );
+}
