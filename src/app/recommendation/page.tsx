@@ -216,7 +216,7 @@ function RecommendationCard({ rec }: { rec: CourseRecommendation }) {
               {rec.course_id} - {rec.name}
             </CardTitle>
             <CardDescription className="text-xs mt-1">
-              Score: {rec.score} | Confidence: {rec.confidence}
+              Score: {rec.score}
             </CardDescription>
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
