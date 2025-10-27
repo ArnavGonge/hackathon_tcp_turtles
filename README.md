@@ -16,7 +16,9 @@ Tech: Next.js | FastAPI | Supabase | scikit-learn | Pandas
 
 Setup:
 git clone https://github.com/MortalFlame21/hackathon_tcp_turtles.git
+
 cd hackathon_tcp_turtles
+
 docker-compose up --build
 
 Demo: [YouTube](https://youtu.be/QB42TJCPTS4)
